@@ -157,7 +157,10 @@ export async function chat(messages, toolDefs = []) {
                 }
             }
 
-            logger.info({ toolCalls: toolCalls.length, hasText: !!text }, 'Gemini responded');
+            logger.info({ toolCalls: toolCalls.length, hasText: !!text, parts: parts.length }, 'Gemini responded');
+            if (parts.length === 0) {
+                logger.warn({ response: JSON.stringify(response) }, 'Gemini returned empty parts list');
+            }
             return { text, toolCalls };
         } catch (err) {
             const isQuotaError = err.message?.includes('Quota exceeded') || err.message?.includes('429') || err.status === 429 || err.status === 503;

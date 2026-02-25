@@ -62,7 +62,9 @@ Output: {"intent": "chat", "args": {}}`;
 
     try {
         logger.info({ model: body.model, text: text.substring(0, 50) }, 'Calling Local Ollama for Intent');
-        const url = config.ollamaUrl || 'http://127.0.0.1:11434/api/chat';
+        let url = config.ollamaUrl || 'http://127.0.0.1:11434/api/chat';
+        if (!url.startsWith('http')) url = 'http://' + url;
+
         const res = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
