@@ -11,9 +11,8 @@ Since NanoBot uses a local SQLite database (`better-sqlite3`), which is a native
 
 ```bash
 pkg update && pkg upgrade -y
-pkg install -y git nodejs python make clang
+pkg install -y git nodejs
 ```
-*(Note: `python`, `make`, and `clang` are required to build the `better-sqlite3` database engine).*
 
 ## Installation
 
@@ -27,20 +26,13 @@ cd nanoboat
 ```bash
 npm install
 ```
-*(This step might take a few minutes as `better-sqlite3` compiles its native C++ code for your device's architecture).*
 
 3. Set up your environment variables:
 ```bash
 cp .env.example .env
 nano .env
 ```
-Fill out `TELEGRAM_BOT_TOKEN`, `GOOGLE_AI_API_KEY`, and other required keys.
-
-**Important for Ollama**: Since you are running the bot on your phone, but your Ollama instance is likely running on your PC, you MUST update the `OLLAMA_URL` in the `.env` file to point to your PC's local network IP (e.g., `192.168.x.x`):
-```env
-OLLAMA_URL=http://192.168.1.XX:11434/api/chat
-```
-*(Also ensure your PC's firewall allows inbound connections on port 11434, and Ollama is configured to listen on `0.0.0.0` by setting the environment variable `OLLAMA_HOST=0.0.0.0` on your PC).*
+Fill out `TELEGRAM_BOT_TOKEN`, `GEMINI_API_KEY`, and other required keys.
 
 ## Running the Bot
 

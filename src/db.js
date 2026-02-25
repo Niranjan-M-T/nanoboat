@@ -1,4 +1,4 @@
-import Database from 'better-sqlite3';
+import { DatabaseSync } from 'node:sqlite';
 import { mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -9,11 +9,11 @@ const DATA_DIR = join(__dirname, '..', 'data');
 mkdirSync(DATA_DIR, { recursive: true });
 
 const dbPath = join(DATA_DIR, 'nanobot.db');
-const db = new Database(dbPath);
+const db = new DatabaseSync(dbPath);
 
 // Performance pragmas for Pi
-db.pragma('journal_mode = WAL');
-db.pragma('synchronous = NORMAL');
+db.exec('PRAGMA journal_mode = WAL');
+db.exec('PRAGMA synchronous = NORMAL');
 
 // ── Core tables ──────────────────────────────────
 
