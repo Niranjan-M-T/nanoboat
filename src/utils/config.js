@@ -37,7 +37,7 @@ const config = {
 
     // Ollama Local LLM Config (For Intent Routing)
     ollamaUrl: process.env.OLLAMA_URL || 'http://127.0.0.1:11434/api/chat',
-    ollamaModelId: process.env.OLLAMA_MODEL_ID || 'qwen2.5:1.5b',
+    ollamaModelId: process.env.OLLAMA_MODEL_ID || 'smollm2:360m',
 
     // Scheduler
     dailyDigestCron: process.env.DAILY_DIGEST_CRON || '0 9 * * *',

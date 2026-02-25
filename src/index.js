@@ -6,6 +6,7 @@ import logger from './utils/logger.js';
 // ── Plugins ──────────────────────────────────────
 import { register as llm } from './plugins/llm/index.js';
 import { register as telegram } from './plugins/telegram/index.js';
+import { register as whatsapp } from './plugins/whatsapp/index.js';
 import { register as email } from './plugins/email/index.js';
 import { register as googleWorkspace } from './plugins/google-workspace/index.js';
 import { register as tasks } from './plugins/tasks/index.js';
@@ -23,6 +24,7 @@ core.db = db;
 const plugins = [
     ['llm', llm],
     ['telegram', telegram],
+    ['whatsapp', whatsapp],
     ['email', email],
     ['google-workspace', googleWorkspace],
     ['tasks', tasks],

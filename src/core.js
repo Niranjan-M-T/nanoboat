@@ -1,6 +1,7 @@
 import logger from './utils/logger.js';
 import * as chat from './memory/chat.js';
 import { needsConfirmation, createConfirmation, resolveConfirmation, cleanExpired } from './confirm.js';
+import config from './utils/config.js';
 
 /**
  * Core engine — the central nervous system of Nanobot.
@@ -89,16 +90,28 @@ export default class Core {
         }
     }
 
+    /**
+     * Send a proactive push notification to the primary admin via Telegram
+     */
+    notifyAdmin(markdownText) {
+        const tgBridge = this.bridges.get('telegram');
+        const adminId = config.telegramAllowedUsers?.[0];
+        if (tgBridge && adminId) {
+            tgBridge(adminId, markdownText).catch(e => logger.warn({ err: e.message }, 'Failed to send admin notification'));
+        }
+    }
+
     // ── Message Handling ────────────────────────────
 
     /**
      * Handle an incoming message from any bridge.
-     * @param {string} source   e.g. 'telegram'
+     * @param {string} source   e.g. 'telegram', 'whatsapp'
      * @param {string} userId
      * @param {string} text
+     * @param {object} meta     Optional metadata like { passive: true }
      */
-    async handleMessage(source, userId, text) {
-        logger.info({ source, userId, text: text.substring(0, 100) }, 'Incoming message');
+    async handleMessage(source, userId, text, meta = {}) {
+        logger.info({ source, userId, text: text.substring(0, 100), meta }, 'Incoming message');
 
         // 1. Check if this is a confirmation reply
         const yes = /^(yes|y|confirm|ok|do it|go ahead|proceed)$/i.test(text.trim());
@@ -147,7 +160,13 @@ export default class Core {
             }
         }
 
-        // 5. Fallback to full Cloud LLM
+        // 5. Passive Mode Check: If local LLM failed or returned 'chat', drop it completely
+        if (meta.passive) {
+            logger.info('Passive message dropped to save Gemini quota');
+            return;
+        }
+
+        // 6. Fallback to full Cloud LLM
         if (!this.llm) {
             return this._reply(source, userId, '⚠️ LLM not configured.');
         }
@@ -255,6 +274,15 @@ export default class Core {
             const resultText = typeof result === 'string' ? result : JSON.stringify(result);
             logger.info({ tool, resultLength: resultText.length }, 'Tool executed');
 
+            // Send push notification to Telegram if a background automation modified state
+            const action = (args.action || '').toLowerCase();
+            if (['task_tool', 'calendar_tool', 'email_tool'].includes(tool) && !['list', 'search', 'read'].includes(action)) {
+                const icon = tool === 'task_tool' ? '📝' : tool === 'calendar_tool' ? '📅' : '📧';
+                const payload = JSON.stringify(args, null, 2);
+                const msg = `*${icon} Automated Action Executed*\n\n*Tool:* \`${tool}\`\n*Action:* \`${action}\`\n*Payload:*\n\`\`\`json\n${payload}\n\`\`\`\n*Result:*\n${resultText}\n\n*Triggered via:* \`${source}\``;
+                this.notifyAdmin(msg);
+            }
+
             if (history) {
                 history.push({ role: 'assistant', content: `[Called ${tool}: ${JSON.stringify(args)}]` });
                 history.push({ role: 'user', content: `[Tool result: ${resultText}]` });
@@ -283,6 +311,14 @@ export default class Core {
         try {
             const result = await entry.handler(args);
             const resultText = typeof result === 'string' ? result : JSON.stringify(result, null, 2);
+
+            // Send push notification for confirmed actions
+            const action = (args.action || '').toLowerCase();
+            const icon = toolName === 'email_tool' ? '📧' : '⚠️';
+            const payload = JSON.stringify(args, null, 2);
+            const msg = `*${icon} User Confirmed Action Executed*\n\n*Tool:* \`${toolName}\`\n*Payload:*\n\`\`\`json\n${payload}\n\`\`\`\n*Result:*\n${resultText}`;
+            this.notifyAdmin(msg);
+
             const reply = `✅ ${resultText}`;
             chat.append(userId, 'assistant', reply);
             return this._reply(source, userId, reply);
