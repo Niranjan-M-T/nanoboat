@@ -1,5 +1,6 @@
 import * as kimi from './kimi.js';
 import * as gemini from './gemini.js';
+import * as intentExtractor from './ollama_local.js';
 import logger from '../../utils/logger.js';
 
 /**
@@ -9,7 +10,7 @@ import logger from '../../utils/logger.js';
  * - Fallback chat: Kimi-K2 (via NVIDIA NIM) — currently unreliable
  * - Confirmation prompts: Gemini
  * - Follow-up (agentic loop): Gemini
- * - Intent Router: Local Ollama (e.g. qwen2.5:1.5b)
+ * - Intent Router: Deterministic (Rule Router + Chrono-node, zero LLM)
  */
 export function register(core) {
     // Primary chat function: Gemini with Kimi fallback
@@ -36,11 +37,10 @@ export function register(core) {
     // Gemini as fast follow-up for agentic tool loop
     core.setFollowUpLLM(gemini.chat);
 
-    // Local LLM as Intent Router
+    // Deterministic Intent Router (no LLM needed)
     core.setIntentRouter(async (text, toolDefs) => {
-        const ollama = await import('./ollama_local.js');
-        return ollama.extractIntent(text, toolDefs);
+        return intentExtractor.extractIntent(text, toolDefs);
     });
 
-    logger.info('LLM plugin loaded (primary: Gemini, fallback: Kimi-K2, local: Ollama)');
+    logger.info('LLM plugin loaded (primary: Gemini, fallback: Kimi-K2, local: Deterministic)');
 }
