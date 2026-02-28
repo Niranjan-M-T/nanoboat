@@ -48,8 +48,29 @@ export function register(core) {
     };
 
     // Auto-detect Termux / Android custom Chromium
-    if (process.env.PUPPETEER_EXECUTABLE_PATH) {
-        puppeteerConfig.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
+    let execPath = process.env.PUPPETEER_EXECUTABLE_PATH;
+
+    // Handle case where user accidentally set path to a directory instead of the executable
+    if (execPath) {
+        try {
+            if (fs.statSync(execPath).isDirectory()) {
+                execPath = null;
+            }
+        } catch (e) {
+            // Path might not exist, leave it as is
+        }
+    }
+
+    // Auto-fallback in Termux if not explicitly set
+    if (!execPath && process.env.PREFIX === '/data/data/com.termux/files/usr') {
+        const path1 = '/data/data/com.termux/files/usr/bin/chromium';
+        const path2 = '/data/data/com.termux/files/usr/bin/';
+        if (fs.existsSync(path1)) execPath = path1;
+        else if (fs.existsSync(path2)) execPath = path2;
+    }
+
+    if (execPath) {
+        puppeteerConfig.executablePath = execPath;
     }
 
     const client = new Client({
