@@ -55,6 +55,7 @@ export function register(core) {
         try {
             if (fs.statSync(execPath).isDirectory()) {
                 execPath = null;
+                delete process.env.PUPPETEER_EXECUTABLE_PATH; // Prevent Puppeteer from bypassing our null
             }
         } catch (e) {
             // Path might not exist, leave it as is
