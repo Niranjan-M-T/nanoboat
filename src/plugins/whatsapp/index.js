@@ -64,7 +64,7 @@ export function register(core) {
     // Auto-fallback in Termux if not explicitly set
     if (!execPath && process.env.PREFIX === '/data/data/com.termux/files/usr') {
         const path1 = '/data/data/com.termux/files/usr/bin/chromium';
-        const path2 = '/data/data/com.termux/files/usr/bin/';
+        const path2 = '/data/data/com.termux/files/usr/bin/chromium-browser';
         if (fs.existsSync(path1)) execPath = path1;
         else if (fs.existsSync(path2)) execPath = path2;
     }
